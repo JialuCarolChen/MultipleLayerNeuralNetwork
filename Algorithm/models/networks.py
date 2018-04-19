@@ -84,15 +84,20 @@ class HiddenLayer(object):
         return self.output
 
     def backward(self, delta):
+        lin_output = np.dot(self.input, self.W) + self.b
+        #dActivation(lin_output)/d(lin_output)
+        delta[lin_output <= 0] = 0
+        #calculate W gradient
         self.grad_W = np.atleast_2d(self.input).T.dot(np.atleast_2d(delta))
+        #calculate the delta for next layer
+        delta_ = delta.dot(self.W.T)
+
         self.grad_b = np.sum(delta, axis=0, keepdims=True)
 
-        self.grad_W += 1e-3 * self.W
+        #self.grad_W += 1e-3 * self.W
         # return delta_ for next layer
         # delta_ = delta.dot(self.W.T) * self.activation_deriv(self.input)
-        delta_ = delta.dot(self.W.T)
-        delta_[self.input <= 0] = 0
-
+        # delta_ = delta.dot(self.W.T)
         # if not self.is_last:
         #     delta_ *= self.layer_mask
         # if not self.is_last:
@@ -227,7 +232,6 @@ class MLP:
                 y_hat = self.forward(X_batch)
 
                 loss, delta = self.cross_entropy(y_batch, y_hat)
-
                 self.backward(delta)
                 self.update(my, learning_rate)
 
