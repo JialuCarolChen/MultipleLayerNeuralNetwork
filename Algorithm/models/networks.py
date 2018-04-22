@@ -1,7 +1,27 @@
 import numpy as np
-from .activation import Activation
 import time
+import math
 
+class Weight_Init():
+
+    def init_origin(self, n_int, n_out):
+        w=np.random.uniform(
+            low=-np.sqrt(6. / (n_int + n_out)),
+            high=np.sqrt(6. / (n_int + n_out)),
+            size=(n_int, n_out)
+
+        )
+        return w
+
+    def init_new(self, n_int, n_out):
+        w=np.random.normal(
+            #mean
+            loc=0,
+            #sd
+            scale=math.sqrt(2.0/n_int),
+            size=(n_int, n_out)
+        )
+        return w
 
 class HiddenLayer(object):
     def __init__(self, n_in, n_out, W=None, b=None, is_last=False,
@@ -27,8 +47,8 @@ class HiddenLayer(object):
         """
         self.epsl = 1e-5
         self.input = None
-        self.activation = Activation(activation).f
-        self.activation_deriv = Activation(activation).f_deriv
+        #self.activation = Activation(activation).f
+        #self.activation_deriv = Activation(activation).f_deriv
         self.activation_name = activation
         self.dropout_p = dropout
         # end-snippet-1
@@ -42,12 +62,7 @@ class HiddenLayer(object):
         #        compared to tanh
         #        We have no info for other function, so we use the same as
         #        tanh.
-        self.W = np.random.uniform(
-            low=-np.sqrt(6. / (n_in + n_out)),
-            high=np.sqrt(6. / (n_in + n_out)),
-            size=(n_in, n_out)
-        )
-
+        self.W = Weight_Init().init_new(n_in, n_out)
         if activation == 'logistic':
             self.W *= 4
 
@@ -70,11 +85,10 @@ class HiddenLayer(object):
         :param input: a symbolic tensor of shape (n_in,)
         '''
         lin_output = np.dot(input, self.W) + self.b
+        #RELU
+        lin_output[lin_output<=0]=0
+        self.output = lin_output
 
-        self.output = (
-            lin_output if self.activation is None or self.is_last
-            else self.activation(lin_output)
-        )
 
         # if not self.is_last:
         #     mask = self.dropout(self.output, 0.6)
@@ -91,9 +105,7 @@ class HiddenLayer(object):
         self.grad_W = np.atleast_2d(self.input).T.dot(np.atleast_2d(delta))
         #calculate the delta for next layer
         delta_ = delta.dot(self.W.T)
-
         self.grad_b = np.sum(delta, axis=0, keepdims=True)
-
         #self.grad_W += 1e-3 * self.W
         # return delta_ for next layer
         # delta_ = delta.dot(self.W.T) * self.activation_deriv(self.input)
@@ -121,8 +133,10 @@ class HiddenLayer(object):
 
     def update(self, my, lr):
         self.v = my * self.v + lr * self.grad_W
-
         self.W -= self.v
+
+        # c
+
         self.b -= lr * self.grad_b
 
 
@@ -164,6 +178,7 @@ class MLP:
         return output
 
     def __softmax(self, x):
+
         exps = np.exp(x)
         return exps / (np.sum(exps, axis=1, keepdims=True))
 
@@ -171,7 +186,6 @@ class MLP:
         reg = 1e-3
 
         probs = self.__softmax(y_hat)
-
         m = y_hat.shape[0]
         log_likelihood = -np.log(probs[range(m), y])
         loss = np.sum(log_likelihood) / m
@@ -208,7 +222,7 @@ class MLP:
                 excerpt = slice(start_idx, start_idx + batchsize)
             yield inputs[excerpt, :], y[excerpt]
 
-    def fit(self, X, y, data_val, y_val, learning_rate=0.1, my=0.9, epochs=100, batchsize=1000):
+    def fit(self, X, y, data_val, y_val, learning_rate=0.01, my=0.9, epochs=100, batchsize=500):
         """
         Online learning.
         :param X: Input data or features
@@ -229,8 +243,9 @@ class MLP:
 
                 X_batch, y_batch = batch
 
-                y_hat = self.forward(X_batch)
 
+                y_hat = self.forward(X_batch)
+                #calculate loss and delta
                 loss, delta = self.cross_entropy(y_batch, y_hat)
                 self.backward(delta)
                 self.update(my, learning_rate)
@@ -246,7 +261,11 @@ class MLP:
 
         return to_return
 
+
+
+
     def predict(self, input, y):
         score = self.forward(input)
+        #print(score)
         pred = np.argmax(score, axis=1)
         print("testing accuracy: {}".format(np.mean(pred == y)))
