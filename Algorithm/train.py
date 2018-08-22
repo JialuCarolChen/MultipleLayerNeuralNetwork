@@ -28,30 +28,6 @@ X /= np.std(X, axis=0)
 X_val = dl.training_val - np.mean(dl.training_val, axis=0)
 X_val /= np.std(X_val, axis=0)
 
-
-
-
-
-
-#check:
-#for i in range(128):
-#    print max(X_val[:,i]), min(X_val[:,i])
-
-
-
-
-#X = (dl.training_dev - np.min(dl.training_dev)) / (np.max(dl.training_dev) - np.min(dl.training_dev))
-
-# 0 center the trainning data
-#  another way of input pre-processing:
-
-
-
-#learning_rate=1e-3
-
-
-
-
 #print(X)
 nn = MLP([128, 64, 32, 10], dropouts=[0.1, 0.1, -1], activation='relu')
 loss = nn.fit(X, dl.label_dev, X_val, dl.label_val, my=0.95, learning_rate=1e-4, epochs=2000)

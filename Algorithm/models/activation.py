@@ -1,20 +1,34 @@
 import numpy as np
 
 class Activation(object):
-
     def __init__(self, activation='tanh'):
+
+        """
+            A class to create different types of activation function,
+            the activation function type can be specified with the activation parameter.
+            self.f stores the activation function,
+            self.f_deriv stores the derivaties of activation function
+
+            :type activation: str
+            :param activation: name of the activation function
+
+        """
+        # logistic function
         if activation == 'logistic':
             self.f = self.__logistic
             self.f_deriv = self.__logistic_derivative
+        # tanh
         elif activation == 'tanh':
             self.f = self.__tanh
             self.f_deriv = self.__tanh_deriv
-        elif activation == 'softmax':
-            self.f = self.__softmax
-            self.f_deriv = self.__softmax_derivative
+        # Relu
         elif activation == 'relu':
             self.f = self.__relu
             self.f_deriv = self.__relu_derivative
+        # Leaky Relu
+        elif activation == 'l_relu':
+            self.f = self.__leaky_relu
+            self.f_deriv= self.__leaky_relu_derivative
         elif activation == None:
             self.f = None
             self.f_deriv = None
@@ -37,14 +51,14 @@ class Activation(object):
         return np.maximum(0, x)
 
     def __relu_derivative(self, a):
-        # a = relu(x)
-        return np.array([[1 if y > 0 else 0 for y in x] for x in a])
-        # return np.array([1 if y > 0 else 0 for y in a])
+        dx = np.ones_like(a)
+        dx[a <= 0] = 0
+        return dx
 
-    def __softmax(self, x):
-        exps = np.exp(x - np.max(x))
-        return exps / (np.sum(exps, axis=1, keepdims=True) + 1e-11) + 1e-11
+    def __leaky_relu(self, x, alpha=0.01):
+        return np.maximum(x * alpha, x)
 
-    def __softmax_derivative(self, a):
-        # a = softmax(x)
-        return np.array([i - i**2 for i in a])
+    def __leaky_relu_derivative(self, a, alpha=0.01):
+        dx = np.ones_like(a)
+        dx[a < 0] = alpha
+        return dx
