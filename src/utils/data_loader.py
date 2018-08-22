@@ -8,11 +8,11 @@ class DataLoader:
         self.is_dev=is_dev
 
         # testing data
-        self.testing = self._open_h5_('/Users/chenjialu/Desktop/DL_Assignment1/Assignment-1-Dataset/test_128.h5', 'data')
+        self.testing = self._open_h5_('./Input/test_128.h5', 'data')
 
         # training+validating data
-        self.training = self._open_h5_('/Users/chenjialu/Desktop/DL_Assignment1/Assignment-1-Dataset/train_128.h5', 'data')
-        self.label = self._open_h5_('/Users/chenjialu/Desktop/DL_Assignment1/Assignment-1-Dataset/train_label.h5', 'label')
+        self.training = self._open_h5_('/Input/train_128.h5', 'data')
+        self.label = self._open_h5_('/Input/train_label.h5', 'label')
 
 
     """
